@@ -53,6 +53,8 @@ cookie_dict = {item["name"]: item["value"] for item in cookie}
 
 response = requests.get("https://www.pixiv.net/ajax/user/"+config["user_id"]["id"]+"/novels/bookmarks?tag=&offset=0&limit=30&rest=show&lang=zh", cookies=cookie_dict, headers=header, timeout=5)
 
+print("[{:^10}] require pixiv web |statue: {:^3}|".format(time.time(),response.status_code))
+
 page = BeautifulSoup(response.text,"html.parser")
 
 
@@ -64,6 +66,7 @@ page_limit = (total_page+30-1)//30
 
 links = dict()
 for i in range(page_limit):
+    print("[{:^10}] require ep {:^3} of web |statue: {:^3}|".format(time.time(),i,response.status_code))
     response = requests.get("https://www.pixiv.net/ajax/user/"+config["user_id"]["id"]+"/novels/bookmarks?tag=&offset="+str(30*i)+"&limit=30&rest=show&lang=zh", cookies=cookie_dict, headers=header)
     data = response.json()
     for work in data["body"]["works"]:                                 #找到文章的名字与链接
@@ -77,6 +80,7 @@ for i in range(page_limit):
     time.sleep(3)
 
 for title, api_link in links.items():
+    print("[{:^10}] require novel {} |statue: {:^3}|".format(time.time(),title,response.status_code))
     response = requests.get(api_link, cookies=cookie_dict, headers=header)
     data = response.json()
     if not data["error"]:
