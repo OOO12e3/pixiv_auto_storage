@@ -3,7 +3,7 @@ import json
 import sqlite3
 
 data = dict()
-with open("storge.json","r") as f:
+with open("storge.json","r",encoding="utf-8") as f:
     data = json.load(f)
 
 database = sqlite3.connect("storage.db")

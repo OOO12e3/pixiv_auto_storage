@@ -1,4 +1,4 @@
-# coding=utf-8
+ï»¿# coding=utf-8
 import json
 import sqlite3
 from token import EXACT_TOKEN_TYPES
@@ -13,7 +13,7 @@ if not os.path.exists("./novel"):
         os.makedirs("./novel")
 
 try:
-    with open("script_config.json","r",encoding='utf-8') as f:          #µ¼ÈëÓÃ»§ÍøÕ¾
+    with open("script_config.json","r",encoding='utf-8') as f:          #å¯¼å…¥ç”¨æˆ·ç½‘ç«™
         config = json.load(f)
 except:
     with open("script_config.json","w",encoding="utf-8") as f:
@@ -42,7 +42,7 @@ datacursor.execute("""CREATE TABLE IF NOT EXISTS novel (
                                 api TEXT NOT NULL);""")
 '''
 try:
-    with open("storge.json","r",encoding='utf-8') as f:                 #µ¼ÈëÏÈÇ°´¢´æµÄÎÄÕÂ
+    with open("storge.json","r",encoding='utf-8') as f:                 #å¯¼å…¥å…ˆå‰å‚¨å­˜çš„æ–‡ç« 
         storge = json.load(f)
 except:
     with open("storge.json","w",encoding="utf-8") as f:
@@ -51,7 +51,7 @@ except:
 '''
 
 try:
-    with open("cookie.json","r",encoding="utf-8") as f:                 #µ¼Èëcookie
+    with open("cookie.json","r",encoding="utf-8") as f:                 #å¯¼å…¥cookie
         cookie = json.load(f)
 except:
     with open("cookie.json","w",encoding="utf-8") as f:
@@ -81,11 +81,11 @@ for i in range(page_limit):
     response = requests.get("https://www.pixiv.net/ajax/user/"+config["user_id"]["id"]+"/novels/bookmarks?tag=&offset="+str(30*i)+"&limit=30&rest=show&lang=zh", cookies=cookie_dict, headers=header)
     print("[{:^10}] require ep {:^3} of web |statue: {:^3}|".format(time.time(),i,response.status_code))
     data = response.json()
-    for work in data["body"]["works"]:                                 #ÕÒµ½ÎÄÕÂµÄÃû×ÖÓëÁ´½Ó
+    for work in data["body"]["works"]:                                 #æ‰¾åˆ°æ–‡ç« çš„åå­—ä¸é“¾æ¥
         work_id = work["id"]
         work_title = work["title"]
         datacursor.execute('''SELECT EXISTS(SELECT 1 FROM novel WHERE id == {});'''.format(work_id))
-        if datacursor.fetchone()[0]:                                             #ÅĞ¶ÏÁ´½ÓÊÇ·ñÖ®Ç°±»´¢´æ¹ı
+        if datacursor.fetchone()[0]:                                             #åˆ¤æ–­é“¾æ¥æ˜¯å¦ä¹‹å‰è¢«å‚¨å­˜è¿‡
             pass
         else:
             url = "https://www.pixiv.net/novel/show.php?id="+work_id
