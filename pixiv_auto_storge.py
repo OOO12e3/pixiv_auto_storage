@@ -90,7 +90,7 @@ for i in range(page_limit):
         else:
             url = "https://www.pixiv.net/novel/show.php?id="+work_id
             api = "https://www.pixiv.net/ajax/novel/"+work_id+"?lang=zh"
-            datacursor.execute('''INSERT INTO novel (id, title, url, api) VALUES (?, ?, ?, ?);''',(work_id, work_title, url, api))
+            datacursor.execute('''INSERT INTO novel (id, title, url, api) VALUES (?, ?, ?, ?);''',(int(work_id), work_title, url, api))
             #storge[work_id] = {"title":work_title,"url":"https://www.pixiv.net/novel/show.php?id="+work_id,"api":"https://www.pixiv.net/ajax/novel/"+work_id+"?lang=zh"}
             links[work_title] = "https://www.pixiv.net/ajax/novel/"+work_id+"?lang=zh"
     time.sleep(3)
