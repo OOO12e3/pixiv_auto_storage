@@ -1,10 +1,13 @@
-
+# coding=utf-8
 import json
+import sqlite3
+from token import EXACT_TOKEN_TYPES
 from bs4 import BeautifulSoup
 import time
 import requests
 import os
 import re
+import sqlite3
 
 if not os.path.exists("./novel"):
         os.makedirs("./novel")
@@ -29,7 +32,15 @@ except:
 }
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-storge = dict()
+#storge = dict()
+database  = sqlite3.connect("storage.db")
+datacursor = database.cursor()
+datacursor.execute("""CREATE TABLE IF NOT EXISTS novel (
+                                id INT PRIMARY KEY NOT NULL,
+                                title TEXT,
+                                url TEXT NOT NULL,
+                                api TEXT NOT NULL);""")
+'''
 try:
     with open("storge.json","r",encoding='utf-8') as f:                 #导入先前储存的文章
         storge = json.load(f)
@@ -37,6 +48,7 @@ except:
     with open("storge.json","w",encoding="utf-8") as f:
         data = {}
         json.dump(data,f,ensure_ascii=False,indent=4)
+'''
 
 try:
     with open("cookie.json","r",encoding="utf-8") as f:                 #导入cookie
@@ -66,22 +78,26 @@ page_limit = (total_page+30-1)//30
 
 links = dict()
 for i in range(page_limit):
-    print("[{:^10}] require ep {:^3} of web |statue: {:^3}|".format(time.time(),i,response.status_code))
     response = requests.get("https://www.pixiv.net/ajax/user/"+config["user_id"]["id"]+"/novels/bookmarks?tag=&offset="+str(30*i)+"&limit=30&rest=show&lang=zh", cookies=cookie_dict, headers=header)
+    print("[{:^10}] require ep {:^3} of web |statue: {:^3}|".format(time.time(),i,response.status_code))
     data = response.json()
     for work in data["body"]["works"]:                                 #找到文章的名字与链接
         work_id = work["id"]
         work_title = work["title"]
-        if work_id in storge:                                             #判断链接是否之前被储存过
+        datacursor.execute('''SELECT EXISTS(SELECT 1 FROM novel WHERE id == {});'''.format(work_id))
+        if datacursor.fetchone()[0]:                                             #判断链接是否之前被储存过
             pass
         else:
-            storge[work_id] = {"title":work_title,"url":"https://www.pixiv.net/novel/show.php?id="+work_id,"api":"https://www.pixiv.net/ajax/novel/"+work_id+"?lang=zh"}
+            url = "https://www.pixiv.net/novel/show.php?id="+work_id
+            api = "https://www.pixiv.net/ajax/novel/"+work_id+"?lang=zh"
+            datacursor.execute('''INSERT INTO novel (id, title, url, api) VALUES (?, ?, ?, ?);''',(work_id, work_title, url, api))
+            #storge[work_id] = {"title":work_title,"url":"https://www.pixiv.net/novel/show.php?id="+work_id,"api":"https://www.pixiv.net/ajax/novel/"+work_id+"?lang=zh"}
             links[work_title] = "https://www.pixiv.net/ajax/novel/"+work_id+"?lang=zh"
     time.sleep(3)
 
 for title, api_link in links.items():
-    print("[{:^10}] require novel {} |statue: {:^3}|".format(time.time(),title,response.status_code))
     response = requests.get(api_link, cookies=cookie_dict, headers=header)
+    print("[{:^10}] require novel {} |statue: {:^3}|".format(time.time(),title,response.status_code))
     data = response.json()
     if not data["error"]:
         title = data["body"]["title"]
@@ -103,9 +119,15 @@ for title, api_link in links.items():
             f.write(content_text)
     time.sleep(3)
 
+'''
 with open("storge.json","w",encoding="utf-8") as f:
     json.dump(storge,f,ensure_ascii=False,indent=4)
-
+'''
+try:
+    database.commit()
+except:
+    pass
+database.close()
 
 print("end")
 
