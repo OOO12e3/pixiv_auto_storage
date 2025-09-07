@@ -150,7 +150,7 @@ def change_to_html(json_content):
     html_content = re.sub(r'\n{3,}', '</p><p>', html_content)
     html_content = re.sub(r'\n{2}', '</p><p>', html_content)
     html_content = html_content.replace('\n', '<br/>')
-    html_content= re.sub("\[uploadedimage:(\w+)\]",r"<img src=\"images/\1.jpg\">",html_content)
+    html_content= re.sub("\[uploadedimage:(\w+)\]","<img src=\"images/\\1.jpg\">",html_content)
     return html_content
 
 def safe_title(unsafe_title):
