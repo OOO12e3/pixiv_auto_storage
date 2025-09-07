@@ -1,0 +1,6 @@
+*pyproj
+*.json
+./novel
+./img
+*.html
+*.zip

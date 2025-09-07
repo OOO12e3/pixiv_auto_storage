@@ -153,45 +153,71 @@ def change_to_html(json_content):
     html_content= re.sub("\[uploadedimage:(\w+)\]",r"<img src=\"images/\1.jpg\">",html_content)
     return html_content
 
+def safe_title(unsafe_title):
+    return re.sub(r'[\/:*?"<>|]',"_",unsafe_title)
+
+
 for title, api_link in links.items():
     response = requests.get(api_link, cookies=cookie_dict, headers=header)
     print("[{:^10}] require novel {} |statue: {:^3}|".format(time.time(),title,response.status_code))
     data = response.json()
-    if not data["error"]:
-        book = epub.EpubBook()
-        title = data["body"]["title"]
-        description = data["body"]["description"]
-        content_html = data["body"]["content"]
-        author = data["body"]["userName"]
-        book.set_title(title)
-        book.add_author(author)
+
+    try:
+        if not data["error"]:
+            book = epub.EpubBook()
+            title = data["body"]["title"]
+            description = data["body"]["description"]
+            content_html = data["body"]["content"]
+            author = data["body"]["userName"]
+            book.set_title(title)
+            book.add_author(author)
+            book.set_language("zh")
 
         
-        images_if = data["body"].get("textEmbeddedImages")
-        if images_if:  # 只有在有图片时才执行
-            for img_key, img_value in data["body"]["textEmbeddedImages"].items():
-                download_img(img_value["urls"]["original"],img_key,cookie=cookie_dict,header=img_header)
-                with open("img/{}.jpg".format(img_key),"rb") as f:
-                    img_tmp = epub.EpubImage(uid=img_key, file_name='images/'+img_key+".jpg", media_type='image/jpeg', content=f.read())
-                    book.add_item(img_tmp)
+            images_if = data["body"].get("textEmbeddedImages")
+            if images_if:  # 只有在有图片时才执行
+                for img_key, img_value in data["body"]["textEmbeddedImages"].items():
+                    download_img(img_value["urls"]["original"],img_key,cookie=cookie_dict,header=img_header)
+                    with open("img/{}.jpg".format(img_key),"rb") as f:
+                        img_tmp = epub.EpubImage(uid=img_key, file_name='images/'+img_key+".jpg", media_type='image/jpeg', content=f.read())
+                        book.add_item(img_tmp)
         
-        book_description = epub.EpubHtml(title='description', file_name='description.xhtml', lang='zh')
-        book_description.content = change_to_html(description)
-        book.add_item(book_description)
+            book_description = epub.EpubHtml(title='description', file_name='description.xhtml', lang='zh')
+            book_description.content = change_to_html(description)
+            book.add_item(book_description)
 
-        book_content = epub.EpubHtml(title="content",file_name="content.xhtml",lang="zh")
-        book_content.content = change_to_html(content_html)
-        book.add_item(book_content)
+            book_content = epub.EpubHtml(title="content",file_name="content.xhtml",lang="zh")
+            book_content.content = change_to_html(content_html)
+            book.add_item(book_content)
 
-        img_key = "cover"
-        download_img(data["body"]["coverUrl"],img_key,cookie=cookie_dict,header=img_header)
-        with open("img/cover.jpg","rb") as f:
-            book.set_cover("cover.jpg", f.read())
+            img_key = "cover"
+            download_img(data["body"]["coverUrl"],img_key,cookie=cookie_dict,header=img_header)
+            with open("img/cover.jpg","rb") as f:
+                book.set_cover("cover.jpg", f.read())
 
         
-        book.spine = [book_description, book_content]
-        epub.write_epub("novel/"+title+".epub",book,{})
+            book.spine = [book_description, book_content]
+            epub.write_epub("novel/"+safe_title(title)+".epub",book,{})
+    except:
+        print("error use txt instead")
+        if not data["error"]:
+            title = data["body"]["title"]
+            content_html = data["body"]["content"]
     
+    
+            page = BeautifulSoup(content_html, "html.parser")
+    
+            for br in page.find_all("br"):
+                br.replace_with("\n")
+    
+            content_text = page.get_text()
+    
+            safe_title = re.sub(r'[\/:*?"<>|]', '_', title)
+
+            with open("./novel/" + safe_title + ".txt", "w", encoding="utf-8") as f:
+                f.write(f"title {title}\n")
+                f.write("\ncontent: \n\n")
+                f.write(content_text)
         
     time.sleep(3)
     
